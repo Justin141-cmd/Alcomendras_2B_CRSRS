@@ -1,20 +1,21 @@
 package com.scc.ui;
 
 import com.scc.Model.User;
+import com.scc.dao.UserDao;
 
 import java.util.Scanner;
 
 public class TechnicianMenu {
 
+    private final UserDao userdao;
     private final Scanner sc;
-    private final User user;
 
-    public TechnicianMenu(Scanner sc, User user) {
+    public TechnicianMenu(UserDao userdao, Scanner sc) {
         this.sc = sc;
-        this.user = user;
+        this.userdao = userdao;
     }
 
-    public void show() {
+    public void show(User technician) {
         boolean loggedIn = true;
 
         while (loggedIn) {
@@ -34,7 +35,7 @@ public class TechnicianMenu {
                 case "3" -> addDiagnosisAndCost();
                 case "4" -> editProfile();
                 case "0" -> {
-                    System.out.println("You have been logged out. Goodbye, " + user.fullname() + "!");
+                    System.out.println("You have been logged out. Goodbye, " + technician.fullname() + "!");
                     loggedIn = false;
                 }
                 default -> System.out.println("-> Invalid choice. Try again.");
@@ -44,7 +45,7 @@ public class TechnicianMenu {
 
     private void viewAssignedJobs() {
         System.out.println("\n=== ASSIGNED JOBS ===");
-        // diri ibutang ang code
+
     }
 
     private void updateRepairStatus() {

@@ -1,20 +1,20 @@
 package com.scc.ui;
 
 import com.scc.Model.User;
+import com.scc.dao.UserDao;
 
 import java.util.Scanner;
 
 public class CustomerMenu {
-
+    private final UserDao userDao;
     private final Scanner sc;
-    private final User user;
 
-    public CustomerMenu(Scanner sc, User user) {
+    public CustomerMenu( UserDao userDao, Scanner sc) {
         this.sc = sc;
-        this.user = user;
+        this.userDao = userDao;
     }
 
-    public void show() {
+    public void show(User customer) {
         boolean loggedIn = true;
 
         while (loggedIn) {
@@ -34,7 +34,7 @@ public class CustomerMenu {
                 case "3" -> cancelPendingRequest();
                 case "4" -> editProfile();
                 case "0" -> {
-                    System.out.println("You have been logged out. Goodbye, " + user.fullname() + "!");
+                    System.out.println("You have been logged out. Goodbye, " +customer.fullname()+"!");
                     loggedIn = false;
                 }
                 default -> System.out.println("-> Invalid choice. Try again.");
@@ -44,7 +44,7 @@ public class CustomerMenu {
 
     private void submitRequest() {
         System.out.println("\n=== SUBMIT REPAIR REQUEST ===");
-        // diri ibutang ang code
+
     }
 
     private void viewMyRequests() {

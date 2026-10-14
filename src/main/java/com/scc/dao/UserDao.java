@@ -21,6 +21,7 @@ public class UserDao {
             pstmt.setString(4, password);
             pstmt.setString(5, role.toUpperCase());
             pstmt.executeUpdate();
+
             return true;
         } catch (SQLException e) {
             System.err.println("Failed: " + e.getMessage());
@@ -56,6 +57,11 @@ public class UserDao {
 
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
+                    String status = rs.getString("status");
+                    if("PENDING".equalsIgnoreCase(status)){
+                        System.out.println("-> Account is pending, Waiting for Approval");
+                        return null;
+                    }
                     return new User(
                             rs.getInt("user_id"),
                             rs.getString("fullname"),
@@ -65,6 +71,8 @@ public class UserDao {
                             rs.getString("role"),
                             rs.getString("status"),
                             rs.getString("date_created"));
+                }else {
+                    System.out.println(" -> Invalid username or password");
                 }
             }
         } catch (SQLException e) {

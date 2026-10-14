@@ -18,7 +18,7 @@ public class Main {
 
         while (running) {
             System.out.println("\n==========================================");
-            System.out.println("   COMPUTER REPAIR SERVICE REQUEST SYSTEM");
+            System.out.println("  COMPUTER REPAIR SERVICE REQUEST SYSTEM");
             System.out.println("==========================================");
             System.out.println("1. Login");
             System.out.println("2. Register");
@@ -114,31 +114,17 @@ public class Main {
 
         User user = userDao.loginUser(username, password);
 
-        if (user == null) {
-            System.out.println("-> Invalid username or password.");
-            return;
-        }
-
-        switch (user.status().toUpperCase()) {
-            case "PENDING" -> System.out.println("-> Your account is still waiting for approval.");
-            case "INACTIVE" -> System.out.println("-> Your account has been deactivated.");
-            case "ACTIVE" -> {
-                System.out.println("-> Login successful! Welcome, " + user.fullname() + " (" + user.role() + ").");
-                openMenuByRole(user);
+        if(user != null){
+            System.out.println("\n -> Welcome "+user.fullname()+" | ROLE: "+user.role()+"");
+            switch (user.role()){
+                case "ADMIN" -> new AdminMenu(userDao, sc).show(user);
+                case "CUSTOMER" -> new CustomerMenu(userDao, sc).show(user);
+                case "TECHNICIAN" -> new TechnicianMenu(userDao, sc).show(user);
+                default ->  System.out.println("Account roles not found!");
             }
-            default -> System.out.println("-> Unknown account status.");
         }
     }
 
-    // Mopili sa menu class (ui package) base sa role
-    private static void openMenuByRole(User user) {
-        switch (user.role().toUpperCase()) {
-            case "ADMIN" -> new AdminMenu(sc, user).show();
-            case "TECHNICIAN" -> new TechnicianMenu(sc, user).show();
-            case "CUSTOMER" -> new CustomerMenu(sc, user).show();
-            default -> System.out.println("-> Unknown role.");
-        }
-    }
 
     private static boolean isValidContact(String contact) {
         return contact.matches("\\d{11}");

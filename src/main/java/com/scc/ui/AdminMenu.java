@@ -1,24 +1,27 @@
 package com.scc.ui;
 
 import com.scc.Model.User;
+import com.scc.dao.UserDao;
 
 import java.util.Scanner;
 
 public class AdminMenu {
 
     private final Scanner sc;
-    private final User user;
+    private final UserDao userdao;
 
-    public AdminMenu(Scanner sc, User user) {
+    public AdminMenu(UserDao userdao, Scanner sc) {
         this.sc = sc;
-        this.user = user;
+        this.userdao = userdao;
     }
 
-    public void show() {
+    public void show(User admin) {
         boolean loggedIn = true;
 
         while (loggedIn) {
-            System.out.println("\n--- ADMIN MENU ---");
+            System.out.println("\n==============================");
+            System.out.println("           ADMIN MENU ");
+            System.out.println("==============================");
             System.out.println("1. Manage Users");
             System.out.println("2. Manage Service Types");
             System.out.println("3. Assign Technician");
@@ -38,7 +41,7 @@ public class AdminMenu {
                 case "5" -> reports();
                 case "6" -> activityLogs();
                 case "0" -> {
-                    System.out.println("You have been logged out. Goodbye, " + user.fullname() + "!");
+                    System.out.println("You have been logged out. Goodbye, " + admin.fullname() + "!");
                     loggedIn = false;
                 }
                 default -> System.out.println("-> Invalid choice. Try again.");
