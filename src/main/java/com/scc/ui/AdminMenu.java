@@ -149,6 +149,15 @@ public class AdminMenu {
         userdao.approvedUser(userID);
     }
 
+    private void updateUser() {
+        List<User> users = userdao.getAllUser();
+        displayUserTable(users, "SELECT USER TO UPDATE");
+
+        if(users.isEmpty()){
+            return
+        }
+    }
+
     private void manageServiceTypes() {
         System.out.println("\n=== MANAGE SERVICE TYPES ===");
     }
