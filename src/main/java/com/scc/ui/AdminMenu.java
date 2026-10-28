@@ -154,7 +154,7 @@ public class AdminMenu {
         displayUserTable(users, "SELECT USER TO UPDATE");
 
         if(users.isEmpty()){
-            return
+            return;
         }
     }
 

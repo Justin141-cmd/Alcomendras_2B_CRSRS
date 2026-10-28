@@ -177,7 +177,5 @@ public class UserDao {
             System.err.println("Error updating user:"+e.getMessage());
         }
         return false;
-        }
     }
-
 }
