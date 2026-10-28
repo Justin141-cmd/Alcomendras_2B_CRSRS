@@ -38,7 +38,7 @@ public class AdminMenu {
             String choice = sc.nextLine().trim();
 
             switch (choice) {
-                case "1" -> manageUsers();
+                case "1" -> manageUsers(admin);
                 case "2" -> manageServiceTypes();
                 case "3" -> assignTechnician();
                 case "4" -> viewAllRequests();
@@ -53,14 +53,14 @@ public class AdminMenu {
         }
     }
 
-    private void manageUsers() {
+    private void manageUsers(User admin) {
         System.out.println("\n=== MANAGE USERS ===");
         while (true) {
             System.out.println("\n===============================");
             System.out.println("         MANAGE USERS");
             System.out.println("===============================");
             System.out.println("[1] Add User\n[2] View All Users\n[3] View Pending User\n[4] Approved User" +
-                    "\n[0] Back");
+                    "\n[5] Update User(ROLE/STATUS) \n[0] Back");
             System.out.print("Enter Choice: ");
             String choice = sc.nextLine();
 
@@ -69,6 +69,7 @@ public class AdminMenu {
                 case "2" -> viewAllUser();
                 case "3" -> viewPendingUser();
                 case "4" -> approvedUser();
+                case "5" -> updateUser(admin);
                 case "0" -> {
                     return;
                 }
@@ -149,15 +150,87 @@ public class AdminMenu {
         userdao.approvedUser(userID);
     }
 
-    private void updateUser() {
+    private void updateUser(User currentAdmin) {
         List<User> users = userdao.getAllUser();
         displayUserTable(users, "SELECT USER TO UPDATE");
 
         if(users.isEmpty()){
             return;
         }
+
+        int userId = readInput("Enter user ID to update(0 to cancel): ");
+
+        if (userId == 0){
+            System.out.println(" -> Operation Cancelled");
+            return;
+        }
+
+        if(userId == currentAdmin.user_id()){
+            System.out.println(" -> [WARNING] Modifying current active Admin is Restricted.");
+        }
+
+        String newRole = readvalidRole();
+        if(newRole == null){
+            System.out.println(" -> Operation Cancelled.");
+            return;
+        }
+
+        String newStatus = readValidStatus();
+
+        if(newStatus == null){
+            System.out.println(" -> Operation Cancelled.");
+            return;
+        }
+
+        userdao.updateUserAndStatus(userId, newRole, newStatus);
     }
 
+    private String readvalidRole(){
+        while(true){
+            System.out.print("Enter Role (ADMIN/CUSTOMER/TECHNICIAN [0 to cancel]): ");
+            String role = sc.nextLine().trim().toUpperCase();
+
+            if(role.equals("0") || role.equals("CANCEL")){
+                return null;
+            }
+
+            if(role.equals("ADMIN") || role.equals("CUSTOMER") || role.equals("TECHNICIAN")){
+                return role;
+            }
+
+            System.out.println(" -> [ERROR] Invalid Role");
+        }
+    }
+
+    private String readValidStatus(){
+        while (true){
+            System.out.print("Enter Status(ACTIVE/INACTIVE [0 to cancel]): ");
+            String status = sc.nextLine().trim().toUpperCase();
+
+            if(status.equals("0") || status.equals("CANCEL")){
+                return null;
+            }
+
+            if(status.equals("ACTIVE") || status.equals("INACTIVE")){
+                return status;
+            }
+
+            System.out.println(" -> [ERROR] Invalid Status. Must be ACTIVE or INACTIVE.");
+        }
+    }
+
+    private int readInput(String prompt){
+        while(true){
+            System.out.print(prompt);
+            String input = sc.nextLine().trim();
+
+            try {
+                return Integer.parseInt(input);
+            }catch (NumberFormatException e){
+                System.out.println(" -> [ERROR] Please enter a valid numeric ID.");
+            }
+        }
+    }
     private void manageServiceTypes() {
         System.out.println("\n=== MANAGE SERVICE TYPES ===");
     }

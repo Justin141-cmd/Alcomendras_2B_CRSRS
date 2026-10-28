@@ -154,19 +154,19 @@ public class UserDao {
     }
     public boolean updateUserAndStatus(int userId, String newroles, String newStatus){
 
-        String sql = "UPDATE users SET roles = ?, status = ? WHERE id = ?";
+        String sql = "UPDATE users SET role = ?, status = ? WHERE user_id = ?";
 
         try(
         Connection conn = DatabaseConnection.getConnection();
         PreparedStatement pstmt = conn.prepareStatement(sql)){
 
             pstmt.setString(1, newroles.toUpperCase());
-            pstmt.setString(2,newStatus.toLowerCase());
+            pstmt.setString(2,newStatus.toUpperCase());
             pstmt.setInt( 3,userId);
 
             int rowsUpdated = pstmt.executeUpdate();
             if(rowsUpdated > 0) {
-                System.out.println(" -> User Id:" + userId + "updated successfully!");
+                System.out.println("\n -> User Id:" + userId + " updated successfully!");
                 return true;
 
             }else {
