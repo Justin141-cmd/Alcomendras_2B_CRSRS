@@ -80,6 +80,29 @@ public class UserDao {
         return null;
     }
 
+    // Gigamit sa admin: ang admin ang mopili sa status
+    public boolean addUser(String fullname, String contact, String username, String password,
+                           String role, String status) {
+        String sql = "INSERT INTO users(fullname, contact, username, password, role, status) VALUES(?, ?, ?, ?, ?, ?)";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, fullname);
+            pstmt.setString(2, contact);
+            pstmt.setString(3, username);
+            pstmt.setString(4, password);
+            pstmt.setString(5, role.toUpperCase());
+            pstmt.setString(6, status.toUpperCase());
+            pstmt.executeUpdate();
+
+            return true;
+        } catch (SQLException e) {
+            System.err.println("Failed to add user: " + e.getMessage());
+            return false;
+        }
+    }
+
     public List<User> getAllUser(){
         List<User> userList = new ArrayList<>();
         String sql = "SELECT * FROM users";
@@ -177,5 +200,31 @@ public class UserDao {
             System.err.println("Error updating user:"+e.getMessage());
         }
         return false;
+    }
+
+    public List<User> getActiveTechnicians() {
+        List<User> list = new ArrayList<>();
+        String sql = "SELECT * FROM users WHERE role = 'TECHNICIAN' AND status = 'ACTIVE'";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            while (rs.next()) {
+                list.add(new User(
+                        rs.getInt("user_id"),
+                        rs.getString("fullname"),
+                        rs.getString("contact"),
+                        rs.getString("username"),
+                        rs.getString("password"),
+                        rs.getString("role"),
+                        rs.getString("status"),
+                        rs.getString("date_created")
+                ));
+            }
+        } catch (SQLException e) {
+            System.err.println("Error fetching technicians: " + e.getMessage());
+        }
+        return list;
     }
 }

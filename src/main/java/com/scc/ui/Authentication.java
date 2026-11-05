@@ -1,6 +1,8 @@
 package com.scc.ui;
 
 import com.scc.Model.User;
+import com.scc.dao.ActivityLogDao;
+import com.scc.dao.ServiceTypeDao;
 import com.scc.dao.UserDao;
 
 import java.util.Scanner;
@@ -8,10 +10,12 @@ import java.util.Scanner;
 public class Authentication {
 
     private final UserDao userDao;
+    private final ActivityLogDao logDao;
     private final Scanner sc;
 
-    public Authentication(UserDao userDao, Scanner sc){
+    public Authentication(UserDao userDao, ActivityLogDao logDao, Scanner sc){
         this.userDao = userDao;
+        this.logDao = logDao;
         this.sc = sc;
     }
 
@@ -118,12 +122,16 @@ public class Authentication {
 
         if(user != null){
             System.out.println("\n -> Welcome "+user.fullname()+" | ROLE: "+user.role()+"");
+            logDao.addLog(user.user_id(), "LOGIN");
             switch (user.role()){
-                case "ADMIN" -> new AdminMenu(userDao, sc).show(user);
-                case "CUSTOMER" -> new CustomerMenu(userDao, sc).show(user);
-                case "TECHNICIAN" -> new TechnicianMenu(userDao, sc).show(user);
+                case "ADMIN" -> new AdminMenu(userDao, logDao, sc).show(user);
+                case "CUSTOMER" -> new CustomerMenu(userDao, logDao,sc).show(user);
+                case "TECHNICIAN" -> new TechnicianMenu(userDao, logDao,sc).show(user);
                 default ->  System.out.println("Account roles not found!");
             }
+            logDao.addLog(user.user_id(), "LOGOUT");
+        }else {
+            logDao.addLog(null, "FAILED_LOGIN: " + username);
         }
     }
 
