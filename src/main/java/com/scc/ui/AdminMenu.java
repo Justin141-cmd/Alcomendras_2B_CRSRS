@@ -11,6 +11,7 @@ import com.scc.dao.UserDao;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
@@ -40,7 +41,7 @@ public class AdminMenu {
             System.out.println("3. Assign Technician");
             System.out.println("4. View All Requests");
             System.out.println("5. Reports");
-            System.out.println("6. Activity Logs");
+            System.out.println("6. View System Audit Logs");
             System.out.println("0. Logout");
             System.out.print("Enter choice: ");
 
@@ -52,7 +53,7 @@ public class AdminMenu {
                 case "3" -> assignTechnician(admin);
                 case "4" -> viewAllRequests();
                 case "5" -> reports();
-                case "6" -> activityLogs();
+                case "6" -> activityLogs(admin);
                 case "0" -> {
                     System.out.println("You have been logged out. Goodbye, " + admin.fullname() + "!");
                     loggedIn = false;
@@ -185,8 +186,9 @@ public class AdminMenu {
 
         if (userdao.addUser(fullname, contact, username, password, role, status)) {
             System.out.println(" -> " + role + " account created successfully! (Status: " + status + ")");
-            logDao.addLog(admin.user_id(), null, "USER_CREATED: " + username, null,
-                    "ROLE=" + role + ", STATUS=" + status);
+            logDao.logAction(admin.user_id(), "USER_CREATED",
+                    "Admin " + admin.user_id() + " created " + role + " account: " + username
+                            + " (" + status + ")");
         }
     }
 
@@ -221,7 +223,8 @@ public class AdminMenu {
         }
 
         if (userdao.approvedUser(userID)) {
-            logDao.addLog(admin.user_id(), null, "USER_APPROVED: ID " + userID, "PENDING", "ACTIVE");
+            logDao.logAction(admin.user_id(), "USER_APPROVED",
+                    "Admin " + admin.user_id() + " approved account for User ID " + userID);
         }
     }
 
@@ -264,14 +267,15 @@ public class AdminMenu {
         }
 
         if (userdao.updateUserAndStatus(userId, newRole, newStatus)) {
-            String oldValue = "ROLE=" + target.role() + ", STATUS=" + target.status();
-            String newValue = "ROLE=" + newRole + ", STATUS=" + newStatus;
+            String description = "Admin " + currentAdmin.user_id() + " changed User " + userId
+                    + " (role " + target.role() + " -> " + newRole
+                    + ", status " + target.status() + " -> " + newStatus + ")";
 
-            String action = (newStatus.equals("INACTIVE") && !target.status().equals("INACTIVE"))
-                    ? "USER_DEACTIVATED: ID " + userId
-                    : "USER_UPDATED: ID " + userId;
+            String actionType = (newStatus.equals("INACTIVE") && !target.status().equals("INACTIVE"))
+                    ? "USER_DEACTIVATED"
+                    : "USER_UPDATED";
 
-            logDao.addLog(currentAdmin.user_id(), null, action, oldValue, newValue);
+            logDao.logAction(currentAdmin.user_id(), actionType, description);
         }
     }
 
@@ -399,8 +403,9 @@ public class AdminMenu {
 
         if (serviceDao.addService(name, description, price, days)) {
             System.out.println(" -> Service type added successfully!");
-            logDao.addLog(admin.user_id(), null, "SERVICE_CREATED: " + name, null,
-                    "PRICE=" + price + ", DAYS=" + days);
+            logDao.logAction(admin.user_id(), "SERVICE_CREATED",
+                    "Admin " + admin.user_id() + " created service " + name
+                            + " (PHP " + price + ", " + days + " day/s)");
         }
     }
 
@@ -449,9 +454,11 @@ public class AdminMenu {
 
         if (serviceDao.updateService(id, name, description, price, days)) {
             System.out.println(" -> Service type updated successfully!");
-            logDao.addLog(admin.user_id(), null, "SERVICE_UPDATED: ID " + id,
-                    "NAME=" + old.serviceName() + ", PRICE=" + old.basePrice() + ", DAYS=" + old.estimatedDays(),
-                    "NAME=" + name + ", PRICE=" + price + ", DAYS=" + days);
+            logDao.logAction(admin.user_id(), "SERVICE_UPDATED",
+                    "Admin " + admin.user_id() + " updated service ID " + id
+                            + " (name " + old.serviceName() + " -> " + name
+                            + ", price " + old.basePrice() + " -> " + price
+                            + ", days " + old.estimatedDays() + " -> " + days + ")");
         }
     }
 
@@ -477,12 +484,12 @@ public class AdminMenu {
 
         boolean makeActive = !service.isActive();
         if (serviceDao.setActive(id, makeActive)) {
-            String oldStatus = service.isActive() ? "ACTIVE" : "ARCHIVED";
             String newStatus = makeActive ? "ACTIVE" : "ARCHIVED";
             System.out.println(" -> Service is now " + newStatus + ".");
-            logDao.addLog(admin.user_id(), null,
-                    (makeActive ? "SERVICE_RESTORED: ID " : "SERVICE_ARCHIVED: ID ") + id,
-                    oldStatus, newStatus);
+            logDao.logAction(admin.user_id(),
+                    makeActive ? "SERVICE_RESTORED" : "SERVICE_ARCHIVED",
+                    "Admin " + admin.user_id() + (makeActive ? " restored" : " archived")
+                            + " service ID " + id + " (" + service.serviceName() + ")");
         }
     }
 
@@ -579,11 +586,15 @@ public class AdminMenu {
         if (requestDao.assignTechnician(selected.requestId(), techId)) {
             System.out.println(" -> " + selected.ticketNumber() + " is now assigned to " + technician.fullname() + ".");
 
-            String oldValue = isReassign ? "TECH=" + selected.technicianName() : "TECH=Unassigned";
-            String newValue = "TECH=" + technician.fullname();
-            logDao.addLog(admin.user_id(), selected.requestId(),
-                    isReassign ? "TECHNICIAN_REASSIGNED" : "TECHNICIAN_ASSIGNED",
-                    oldValue, newValue);
+            String description = isReassign
+                    ? "Admin " + admin.user_id() + " reassigned " + selected.ticketNumber()
+                    + " from " + selected.technicianName() + " to " + technician.fullname()
+                    : "Admin " + admin.user_id() + " assigned " + selected.ticketNumber()
+                    + " to " + technician.fullname();
+
+            logDao.logAction(admin.user_id(),
+                    isReassign ? "TECH_REASSIGNED" : "TECH_ASSIGNED",
+                    description);
         } else {
             System.out.println(" -> [ERROR] Unable to assign. The request may already be completed or cancelled.");
         }
@@ -743,27 +754,24 @@ public class AdminMenu {
         System.out.println("\n=== REPORTS ===");
     }
 
-    // ==================== ACTIVITY LOGS ====================
+    // ==================== VIEW SYSTEM AUDIT LOGS ====================
 
-    private void activityLogs() {
+    private void activityLogs(User admin) {
         while (true) {
             System.out.println("\n===============================");
-            System.out.println("         ACTIVITY LOGS");
+            System.out.println("      VIEW SYSTEM AUDIT LOGS");
             System.out.println("===============================");
-            System.out.println("[1] View All Logs\n[2] View Logs by User ID\n[3] View Logs by Request ID\n[0] Back");
+            System.out.println("[1] View All System Logs\n[2] Filter Logs by User ID\n[3] Clear All Logs\n[0] Back");
             System.out.print("Enter Choice: ");
             String choice = sc.nextLine().trim();
 
             switch (choice) {
-                case "1" -> displayLogTable(logDao.getAllLogs(), " ALL ACTIVITY LOGS ");
+                case "1" -> displayLogTable(logDao.getAllLogs(), " ALL SYSTEM LOGS ");
                 case "2" -> {
                     int userId = readInput("Enter User ID: ");
-                    displayLogTable(logDao.getLogsByUser(userId), " LOGS OF USER " + userId + " ");
+                    displayLogTable(logDao.getLogsByUserId(userId), " LOGS OF USER " + userId + " ");
                 }
-                case "3" -> {
-                    int requestId = readInput("Enter Request ID: ");
-                    displayLogTable(logDao.getLogsByRequest(requestId), " LOGS OF REQUEST " + requestId + " ");
-                }
+                case "3" -> clearLogs(admin);
                 case "0" -> {
                     return;
                 }
@@ -772,34 +780,99 @@ public class AdminMenu {
         }
     }
 
+    // Safe clear: kinahanglan i-type ang YES, ug ang pag-clear mismo ma-log
+    private void clearLogs(User admin) {
+        System.out.println("\n -> [WARNING] This will permanently delete ALL audit log entries.");
+        System.out.print("Type YES to confirm (anything else to cancel): ");
+        String confirm = sc.nextLine().trim();
+
+        if (!confirm.equals("YES")) {
+            System.out.println(" -> Cancelled. No logs were deleted.");
+            return;
+        }
+
+        int deleted = logDao.clearAllLogs();
+        if (deleted >= 0) {
+            System.out.println(" -> " + deleted + " log entr" + (deleted == 1 ? "y" : "ies") + " cleared.");
+            logDao.logAction(admin.user_id(), "LOGS_CLEARED",
+                    "Admin " + admin.user_id() + " cleared " + deleted + " audit log entries.");
+        } else {
+            System.out.println(" -> [ERROR] Unable to clear logs.");
+        }
+    }
+
+    // Format sa spec: %-5s | %-8s | %-18s | %-35s | %-20s
+    // Ang taas nga description gi-wrap sa sunod nga linya para dili mabungkag ang table
     private void displayLogTable(List<ActivityLog> logs, String title) {
-        System.out.println("\n=============================================== " + title + " ===============================================");
+        System.out.println("\n=================================== " + title + " ===================================");
 
         if (logs.isEmpty()) {
             System.out.println("\n-> No Records.");
             return;
         }
 
-        String border = "+------+---------------------+---------+---------+------------------------------+----------------------+----------------------+";
-        String format = "| %-4s | %-19s | %-7s | %-7s | %-28s | %-20s | %-20s |\n";
+        String format = "%-5s | %-8s | %-18s | %-35s | %-20s%n";
+        String line = "-".repeat(98);
 
         System.out.println();
-        System.out.println(border);
-        System.out.printf(format, "ID", "Timestamp", "User", "Request", "Action", "Old Value", "New Value");
-        System.out.println(border);
+        System.out.println(line);
+        System.out.printf(format, "ID", "User ID", "Action Type", "Description", "Timestamp");
+        System.out.println(line);
 
         for (ActivityLog l : logs) {
+            List<String> descLines = wrap(l.description(), 35);
+
             System.out.printf(format,
-                    l.logId(),
-                    l.logTimestamp(),
+                    l.id(),
                     l.userId() == null ? "N/A" : l.userId(),
-                    l.requestId() == null ? "N/A" : l.requestId(),
-                    cut(l.action(), 28),
-                    cut(l.oldValue(), 20),
-                    cut(l.newValue(), 20));
+                    cut(l.actionType(), 18),
+                    descLines.get(0),
+                    l.timestamp() == null ? "-" : l.timestamp());
+
+            for (int i = 1; i < descLines.size(); i++) {
+                System.out.printf(format, "", "", "", descLines.get(i), "");
+            }
         }
 
-        System.out.println(border);
+        System.out.println(line);
+        System.out.println(" Total logs: " + logs.size());
+    }
+
+    // Putlon ang text sa mga linya nga dili molapas sa width (by words)
+    private List<String> wrap(String text, int width) {
+        List<String> lines = new ArrayList<>();
+
+        if (text == null || text.isBlank()) {
+            lines.add("-");
+            return lines;
+        }
+
+        StringBuilder current = new StringBuilder();
+        for (String word : text.trim().split("\\s+")) {
+            while (word.length() > width) {
+                if (current.length() > 0) {
+                    lines.add(current.toString());
+                    current.setLength(0);
+                }
+                lines.add(word.substring(0, width));
+                word = word.substring(width);
+            }
+
+            if (current.length() > 0 && current.length() + 1 + word.length() > width) {
+                lines.add(current.toString());
+                current.setLength(0);
+            }
+
+            if (current.length() > 0) {
+                current.append(' ');
+            }
+            current.append(word);
+        }
+
+        if (current.length() > 0) {
+            lines.add(current.toString());
+        }
+        return lines;
     }
 
     // Putlon ang taas nga text para dili mabungkag ang table

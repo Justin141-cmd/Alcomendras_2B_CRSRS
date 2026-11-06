@@ -2,7 +2,6 @@ package com.scc.ui;
 
 import com.scc.Model.User;
 import com.scc.dao.ActivityLogDao;
-import com.scc.dao.ServiceTypeDao;
 import com.scc.dao.UserDao;
 
 import java.util.Scanner;
@@ -101,6 +100,9 @@ public class Authentication {
 
         if (userDao.registerUser(fullname, contact, username, password, role)) {
             System.out.println("-> Successful Registration, Waiting for Approval");
+            // Wala pay user_id (wala pa ma-login), so system log
+            logDao.logSystemAction("USER_REGISTERED",
+                    "User " + username + " registered as " + role + " (pending approval).");
         }
     }
 
@@ -122,16 +124,18 @@ public class Authentication {
 
         if(user != null){
             System.out.println("\n -> Welcome "+user.fullname()+" | ROLE: "+user.role()+"");
-            logDao.addLog(user.user_id(), "LOGIN");
+            logDao.logAction(user.user_id(), "LOGIN",
+                    "User " + user.username() + " (ID: " + user.user_id() + ") logged in.");
             switch (user.role()){
                 case "ADMIN" -> new AdminMenu(userDao, logDao, sc).show(user);
                 case "CUSTOMER" -> new CustomerMenu(userDao, logDao,sc).show(user);
                 case "TECHNICIAN" -> new TechnicianMenu(userDao, logDao,sc).show(user);
                 default ->  System.out.println("Account roles not found!");
             }
-            logDao.addLog(user.user_id(), "LOGOUT");
+            logDao.logAction(user.user_id(), "LOGOUT",
+                    "User " + user.username() + " (ID: " + user.user_id() + ") logged out.");
         }else {
-            logDao.addLog(null, "FAILED_LOGIN: " + username);
+            logDao.logSystemAction("FAILED_LOGIN", "Failed login attempt for username: " + username);
         }
     }
 

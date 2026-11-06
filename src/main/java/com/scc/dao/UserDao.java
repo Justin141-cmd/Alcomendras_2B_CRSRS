@@ -108,8 +108,8 @@ public class UserDao {
         String sql = "SELECT * FROM users";
 
         try(Connection conn = DatabaseConnection.getConnection();
-            Statement stmt = conn.createStatement();
-            ResultSet rs = stmt.executeQuery(sql)){
+            PreparedStatement pstmt = conn.prepareStatement(sql);
+            ResultSet rs = pstmt.executeQuery()){
 
             while (rs.next()) {
                 userList.add(new User(
@@ -134,8 +134,8 @@ public class UserDao {
         String sql = "SELECT * FROM users WHERE status = 'PENDING'";
 
         try(Connection conn = DatabaseConnection.getConnection();
-            Statement stmt = conn.createStatement();
-            ResultSet rs = stmt.executeQuery(sql)){
+            PreparedStatement pstmt = conn.prepareStatement(sql);
+            ResultSet rs = pstmt.executeQuery()){
 
             while (rs.next()) {
                 pendingList.add(new User(
@@ -180,8 +180,8 @@ public class UserDao {
         String sql = "UPDATE users SET role = ?, status = ? WHERE user_id = ?";
 
         try(
-        Connection conn = DatabaseConnection.getConnection();
-        PreparedStatement pstmt = conn.prepareStatement(sql)){
+                Connection conn = DatabaseConnection.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)){
 
             pstmt.setString(1, newroles.toUpperCase());
             pstmt.setString(2,newStatus.toUpperCase());
@@ -207,8 +207,8 @@ public class UserDao {
         String sql = "SELECT * FROM users WHERE role = 'TECHNICIAN' AND status = 'ACTIVE'";
 
         try (Connection conn = DatabaseConnection.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
+             PreparedStatement pstmt = conn.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
 
             while (rs.next()) {
                 list.add(new User(

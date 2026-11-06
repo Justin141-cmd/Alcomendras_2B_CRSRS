@@ -114,7 +114,9 @@ public class CustomerMenu {
                 deviceType, brandModel, problem, priority);
 
         if (requestId > 0) {
-            logDao.addLog(customer.user_id(), requestId, "REQUEST_SUBMITTED", null, "STATUS=PENDING");
+            logDao.logAction(customer.user_id(), "TICKET_CREATED",
+                    "Submitted " + String.format("TKT-%04d", requestId)
+                            + " (" + selected.serviceName() + ", " + priority + ")");
             printReceipt(requestId, selected, deviceType, brandModel, priority);
         } else {
             System.out.println(" -> [ERROR] Failed to submit request.");
@@ -287,7 +289,8 @@ public class CustomerMenu {
 
         if (requestDao.cancelRequest(id, customer.user_id())) {
             System.out.println(" -> " + String.format("TKT-%04d", id) + " has been cancelled.");
-            logDao.addLog(customer.user_id(), id, "REQUEST_CANCELLED", "PENDING", "CANCELLED");
+            logDao.logAction(customer.user_id(), "TICKET_CANCELLED",
+                    "Cancelled " + String.format("TKT-%04d", id) + " status from PENDING to CANCELLED");
         } else {
             System.out.println(" -> [ERROR] Unable to cancel. The request may no longer be pending.");
         }

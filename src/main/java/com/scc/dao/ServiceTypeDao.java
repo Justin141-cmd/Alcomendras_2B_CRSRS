@@ -111,8 +111,8 @@ public class ServiceTypeDao {
         List<ServiceType> list = new ArrayList<>();
 
         try (Connection conn = DatabaseConnection.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
+             PreparedStatement pstmt = conn.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
 
             while (rs.next()) {
                 list.add(mapRow(rs));

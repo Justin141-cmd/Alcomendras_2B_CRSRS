@@ -180,7 +180,8 @@ public class TechnicianMenu {
 
         if (requestDao.updateStatus(job.requestId(), technician.user_id(), current, next)) {
             System.out.println(" -> " + job.ticketNumber() + " is now " + next + ".");
-            logDao.addLog(technician.user_id(), job.requestId(), "STATUS_CHANGE", current, next);
+            logDao.logAction(technician.user_id(), "STATUS_CHANGE",
+                    "Updated " + job.ticketNumber() + " status from " + current + " to " + next);
         } else {
             System.out.println(" -> [ERROR] Unable to update. The ticket may have been changed or reassigned.");
         }
@@ -240,13 +241,14 @@ public class TechnicianMenu {
             System.out.println(" -> " + job.ticketNumber() + " updated successfully!");
 
             if (notesChanged) {
-                logDao.addLog(technician.user_id(), job.requestId(), "DIAGNOSIS_UPDATED",
-                        oldNotes.isBlank() ? null : oldNotes, newNotes);
+                logDao.logAction(technician.user_id(), "DIAGNOSIS_UPDATED",
+                        "Updated diagnosis notes of " + job.ticketNumber());
             }
             if (costChanged) {
-                logDao.addLog(technician.user_id(), job.requestId(), "COST_EDIT",
-                        "EST=" + money(job.estimatedCost()) + ", FINAL=" + money(job.finalCost()),
-                        "EST=" + money(newEstimated) + ", FINAL=" + money(newFinal));
+                logDao.logAction(technician.user_id(), "COST_EDIT",
+                        "Updated " + job.ticketNumber() + " cost: EST " + money(job.estimatedCost())
+                                + " -> " + money(newEstimated) + ", FINAL " + money(job.finalCost())
+                                + " -> " + money(newFinal));
             }
         } else {
             System.out.println(" -> [ERROR] Unable to update. The ticket may be completed, cancelled, or reassigned.");
