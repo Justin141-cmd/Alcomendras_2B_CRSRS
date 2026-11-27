@@ -100,8 +100,9 @@ public class DatabaseInitializer {
             if (rs.next()) tableSql = rs.getString(1);
         }
 
-        if (tableSql == null || !tableSql.contains("INACTIVE")) {
-            return;   // wala pa ang table o bag-o na ang structure
+        // Wala pa ang table, o bag-o na ang structure (naay APPROVED nga CHECK constraint)
+        if (tableSql == null || tableSql.contains("'APPROVED'")) {
+            return;
         }
 
         try (Statement stmt = conn.createStatement()) {
@@ -121,7 +122,7 @@ public class DatabaseInitializer {
             stmt.execute("""
                     INSERT INTO users_new(user_id, fullname, contact, username, password, role, status, date_created)
                     SELECT user_id, fullname, contact, username, password, role,
-                           CASE status WHEN 'ACTIVE' THEN 'APPROVED' ELSE 'PENDING' END,
+                           CASE WHEN status IN ('ACTIVE', 'APPROVED') THEN 'APPROVED' ELSE 'PENDING' END,
                            date_created
                     FROM users
                     """);

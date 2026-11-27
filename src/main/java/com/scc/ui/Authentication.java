@@ -49,54 +49,49 @@ public class Authentication {
     private void register() {
         System.out.println("\n--- REGISTER ---");
 
-        System.out.print("Full name: ");
-        String fullname = sc.nextLine().trim();
-        if (fullname.isEmpty()) {
-            System.out.println("-> Full name is required.");
-            return;
+        String fullname = InputUtil.readRequired(sc, "Full name: ");
+
+        String contact;
+        while (true) {
+            System.out.print("Contact number (11 digits, e.g. 09171234567): ");
+            contact = sc.nextLine().trim();
+            if (isValidContact(contact)) break;
+            System.out.println(" -> [ERROR] It must be exactly 11 digits (numbers only).");
         }
 
-        System.out.print("Contact number (11 digits, e.g. 09171234567): ");
-        String contact = sc.nextLine().trim();
-        if (!isValidContact(contact)) {
-            System.out.println("-> Invalid contact number. It must be exactly 11 digits (numbers only).");
-            return;
+        String username;
+        while (true) {
+            System.out.print("Username: ");
+            username = sc.nextLine().trim();
+            if (username.length() < 4 || username.contains(" ")) {
+                System.out.println(" -> [ERROR] Username must be at least 4 characters and have no spaces.");
+            } else if (userDao.usernameExists(username)) {
+                System.out.println(" -> [ERROR] Username already taken.");
+            } else {
+                break;
+            }
         }
 
-        System.out.print("Username: ");
-        String username = sc.nextLine().trim();
-        if (username.length() < 4 || username.contains(" ")) {
-            System.out.println("-> Username must be at least 4 characters and have no spaces.");
-            return;
+        String password;
+        while (true) {
+            System.out.print("Password (at least 6 characters): ");
+            password = sc.nextLine().trim();
+            if (password.length() >= 6) break;
+            System.out.println(" -> [ERROR] Password must be at least 6 characters.");
         }
-        if (userDao.usernameExists(username)) {
-            System.out.println("-> Username already taken.");
-            return;
-        }
-
-        System.out.print("Password (at least 6 characters): ");
-        String password = sc.nextLine().trim();
-        if (password.length() < 6) {
-            System.out.println("-> Password must be at least 6 characters.");
-            return;
-        }
-
-        System.out.println("Select role:");
-        System.out.println("1. Customer");
-        System.out.println("2. Technician");
-        System.out.println("3. Admin");
-        System.out.print("Enter choice: ");
-        String roleChoice = sc.nextLine().trim();
 
         String role;
-        switch (roleChoice) {
-            case "1" -> role = "CUSTOMER";
-            case "2" -> role = "TECHNICIAN";
-            case "3" -> role = "ADMIN";
-            default -> {
-                System.out.println("-> Invalid role choice.");
-                return;
-            }
+        while (true) {
+            System.out.println("Select role:");
+            System.out.println("1. Customer");
+            System.out.println("2. Technician");
+            System.out.println("3. Admin");
+            System.out.print("Enter choice: ");
+            String roleChoice = sc.nextLine().trim();
+            if (roleChoice.equals("1")) { role = "CUSTOMER"; break; }
+            if (roleChoice.equals("2")) { role = "TECHNICIAN"; break; }
+            if (roleChoice.equals("3")) { role = "ADMIN"; break; }
+            System.out.println(" -> [ERROR] Invalid role choice. Enter 1 to 3 only.");
         }
 
         if (userDao.registerUser(fullname, contact, username, password, role)) {
