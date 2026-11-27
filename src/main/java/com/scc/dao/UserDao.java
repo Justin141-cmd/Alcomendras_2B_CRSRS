@@ -1,6 +1,6 @@
 package com.scc.dao;
 
-import com.scc.Model.User;
+import com.scc.model.User;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -59,6 +59,10 @@ public class UserDao {
                     String status = rs.getString("status");
                     if("PENDING".equalsIgnoreCase(status)){
                         System.out.println("-> Account is pending, Waiting for Approval");
+                        return null;
+                    }
+                    if("INACTIVE".equalsIgnoreCase(status)){
+                        System.out.println("-> Account is inactive. Please contact the Admin.");
                         return null;
                     }
                     return new User(
@@ -226,5 +230,39 @@ public class UserDao {
             System.err.println("Error fetching technicians: " + e.getMessage());
         }
         return list;
+    }
+
+    // Edit Profile: fullname + contact
+    public boolean updateProfile(int userId, String fullname, String contact) {
+        String sql = "UPDATE users SET fullname = ?, contact = ? WHERE user_id = ?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, fullname);
+            pstmt.setString(2, contact);
+            pstmt.setInt(3, userId);
+            return pstmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Error updating profile: " + e.getMessage());
+            return false;
+        }
+    }
+
+    // Change password: kinahanglan sakto ang karaan nga password
+    public boolean changePassword(int userId, String oldPassword, String newPassword) {
+        String sql = "UPDATE users SET password = ? WHERE user_id = ? AND password = ?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, newPassword);
+            pstmt.setInt(2, userId);
+            pstmt.setString(3, oldPassword);
+            return pstmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Error changing password: " + e.getMessage());
+            return false;
+        }
     }
 }

@@ -1,9 +1,11 @@
 package com.scc.dao;
 
-import com.scc.Model.RepairRequest;
+import com.scc.model.RepairRequest;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.List;
 
 public class RepairRequestDao {
@@ -245,5 +247,38 @@ public class RepairRequestDao {
             System.err.println("Failed to assign technician: " + e.getMessage());
             return false;
         }
+    }
+
+    // Report: gidaghanon sa requests matag status
+    public Map<String, Integer> countByStatus() {
+        Map<String, Integer> counts = new LinkedHashMap<>();
+        String sql = "SELECT status, COUNT(*) AS total FROM repair_requests GROUP BY status ORDER BY status";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
+
+            while (rs.next()) {
+                counts.put(rs.getString("status"), rs.getInt("total"));
+            }
+        } catch (SQLException e) {
+            System.err.println("Error generating report: " + e.getMessage());
+        }
+        return counts;
+    }
+
+    // Report: total nga kita (final_cost sa COMPLETED nga requests)
+    public double totalRevenue() {
+        String sql = "SELECT COALESCE(SUM(final_cost), 0) FROM repair_requests WHERE status = 'COMPLETED'";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
+
+            if (rs.next()) return rs.getDouble(1);
+        } catch (SQLException e) {
+            System.err.println("Error computing revenue: " + e.getMessage());
+        }
+        return 0;
     }
 }

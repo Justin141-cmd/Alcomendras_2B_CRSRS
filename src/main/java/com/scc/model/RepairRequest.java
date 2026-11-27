@@ -1,4 +1,4 @@
-package com.scc.Model;
+package com.scc.model;
 
 public record RepairRequest(int requestId, int customerId, Integer technicianId, Integer serviceId,
                             String deviceType, String brandModel, String problemDescription,

@@ -1,12 +1,14 @@
 package com.scc.ui;
 
-import com.scc.Model.RepairRequest;
-import com.scc.Model.ServiceType;
-import com.scc.Model.User;
+import com.scc.model.RepairRequest;
+import com.scc.model.ServiceType;
+import com.scc.model.User;
 import com.scc.dao.ActivityLogDao;
 import com.scc.dao.RepairRequestDao;
 import com.scc.dao.ServiceTypeDao;
 import com.scc.dao.UserDao;
+import com.scc.util.InputUtil;
+import com.scc.util.TextUtil;
 
 import java.util.List;
 import java.util.Scanner;
@@ -47,7 +49,7 @@ public class CustomerMenu {
                 case "1" -> submitRequest(customer);
                 case "2" -> viewMyRequests(customer);
                 case "3" -> cancelPendingRequest(customer);
-                case "4" -> editProfile();
+                case "4" -> editProfile(customer);
                 case "0" -> {
                     System.out.println("\n -> You have been logged out. Goodbye, " + customer.fullname() + "!");
                     loggedIn = false;
@@ -298,8 +300,9 @@ public class CustomerMenu {
 
     // ---------- Soon ----------
 
-    private void editProfile() {
+    private void editProfile(User user) {
         printHeader("EDIT PROFILE / CHANGE PASSWORD");
+        new ProfileEditor(userDao, logDao, sc).show(user);
     }
 
     // ---------- Input helpers ----------
@@ -360,16 +363,7 @@ public class CustomerMenu {
     }
 
     private int readInput(String prompt) {
-        while (true) {
-            System.out.print(prompt);
-            String input = sc.nextLine().trim();
-
-            try {
-                return Integer.parseInt(input);
-            } catch (NumberFormatException e) {
-                System.out.println(" -> [ERROR] Please enter a valid number.");
-            }
-        }
+        return InputUtil.readInt(sc, prompt);
     }
 
     // Madawat ang "5", "0005", o "TKT-0005"
@@ -401,7 +395,6 @@ public class CustomerMenu {
 
     // Putlon ang taas nga text para dili mabungkag ang table
     private String cut(String text, int max) {
-        if (text == null) return "-";
-        return text.length() <= max ? text : text.substring(0, max - 3) + "...";
+        return TextUtil.cut(text, max);
     }
 }

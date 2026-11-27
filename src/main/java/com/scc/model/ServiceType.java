@@ -1,4 +1,4 @@
-package com.scc.Model;
+package com.scc.model;
 
 public record ServiceType(int serviceId, String serviceName, String description,
                           double basePrice, int estimatedDays, boolean isActive) {

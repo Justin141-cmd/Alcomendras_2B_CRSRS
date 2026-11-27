@@ -11,7 +11,7 @@ import java.util.Set;
 
 public class DatabaseInitializer {
 
-    public static void initializer() {
+    public static void initializeDatabase() {
         try (Connection conn = DatabaseConnection.getConnection();
              Statement stmt = conn.createStatement()) {
 

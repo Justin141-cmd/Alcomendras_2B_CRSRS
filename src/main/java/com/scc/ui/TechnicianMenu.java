@@ -1,10 +1,12 @@
 package com.scc.ui;
 
-import com.scc.Model.RepairRequest;
-import com.scc.Model.User;
+import com.scc.model.RepairRequest;
+import com.scc.model.User;
 import com.scc.dao.ActivityLogDao;
 import com.scc.dao.RepairRequestDao;
 import com.scc.dao.UserDao;
+import com.scc.util.InputUtil;
+import com.scc.util.TextUtil;
 
 import java.util.List;
 import java.util.Scanner;
@@ -44,7 +46,7 @@ public class TechnicianMenu {
                 case "1" -> viewAssignedJobs(technician);
                 case "2" -> updateRepairStatus(technician);
                 case "3" -> addDiagnosisAndCost(technician);
-                case "4" -> editProfile();
+                case "4" -> editProfile(technician);
                 case "0" -> {
                     System.out.println("\n -> You have been logged out. Goodbye, " + technician.fullname() + "!");
                     loggedIn = false;
@@ -257,8 +259,9 @@ public class TechnicianMenu {
 
     // ==================== SOON ====================
 
-    private void editProfile() {
+    private void editProfile(User user) {
         printHeader("EDIT PROFILE / CHANGE PASSWORD");
+        new ProfileEditor(userdao, logDao, sc).show(user);
     }
 
     // ==================== JOB HELPERS ====================
@@ -354,7 +357,6 @@ public class TechnicianMenu {
 
     // Putlon ang taas nga text para dili mabungkag ang table
     private String cut(String text, int max) {
-        if (text == null) return "-";
-        return text.length() <= max ? text : text.substring(0, max - 3) + "...";
+        return TextUtil.cut(text, max);
     }
 }

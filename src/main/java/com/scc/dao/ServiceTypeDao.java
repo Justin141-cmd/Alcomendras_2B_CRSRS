@@ -1,6 +1,6 @@
 package com.scc.dao;
 
-import com.scc.Model.ServiceType;
+import com.scc.model.ServiceType;
 
 import java.sql.*;
 import java.util.ArrayList;

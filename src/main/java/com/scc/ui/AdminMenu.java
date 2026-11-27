@@ -1,13 +1,15 @@
 package com.scc.ui;
 
-import com.scc.Model.ActivityLog;
-import com.scc.Model.RepairRequest;
-import com.scc.Model.ServiceType;
-import com.scc.Model.User;
+import com.scc.model.ActivityLog;
+import com.scc.model.RepairRequest;
+import com.scc.model.ServiceType;
+import com.scc.model.User;
 import com.scc.dao.ActivityLogDao;
 import com.scc.dao.RepairRequestDao;
 import com.scc.dao.ServiceTypeDao;
 import com.scc.dao.UserDao;
+import com.scc.util.InputUtil;
+import com.scc.util.TextUtil;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
@@ -314,16 +316,7 @@ public class AdminMenu {
     }
 
     private int readInput(String prompt) {
-        while (true) {
-            System.out.print(prompt);
-            String input = sc.nextLine().trim();
-
-            try {
-                return Integer.parseInt(input);
-            } catch (NumberFormatException e) {
-                System.out.println(" -> [ERROR] Please enter a valid numeric ID.");
-            }
-        }
+        return InputUtil.readInt(sc, prompt);
     }
 
     // ==================== MANAGE SERVICE TYPES ====================
@@ -752,6 +745,27 @@ public class AdminMenu {
 
     private void reports() {
         System.out.println("\n=== REPORTS ===");
+
+        java.util.Map<String, Integer> counts = requestDao.countByStatus();
+        if (counts.isEmpty()) {
+            System.out.println("\n-> No Records.");
+            return;
+        }
+
+        String line = "+----------------------+----------+";
+        System.out.println(line);
+        System.out.printf("| %-20s | %-8s |%n", "Request Status", "Total");
+        System.out.println(line);
+
+        int total = 0;
+        for (java.util.Map.Entry<String, Integer> e : counts.entrySet()) {
+            System.out.printf("| %-20s | %-8d |%n", e.getKey(), e.getValue());
+            total += e.getValue();
+        }
+        System.out.println(line);
+        System.out.printf("| %-20s | %-8d |%n", "TOTAL REQUESTS", total);
+        System.out.println(line);
+        System.out.printf("Total Revenue (COMPLETED): PHP %,.2f%n", requestDao.totalRevenue());
     }
 
     // ==================== VIEW SYSTEM AUDIT LOGS ====================
@@ -840,44 +854,11 @@ public class AdminMenu {
 
     // Putlon ang text sa mga linya nga dili molapas sa width (by words)
     private List<String> wrap(String text, int width) {
-        List<String> lines = new ArrayList<>();
-
-        if (text == null || text.isBlank()) {
-            lines.add("-");
-            return lines;
-        }
-
-        StringBuilder current = new StringBuilder();
-        for (String word : text.trim().split("\\s+")) {
-            while (word.length() > width) {
-                if (current.length() > 0) {
-                    lines.add(current.toString());
-                    current.setLength(0);
-                }
-                lines.add(word.substring(0, width));
-                word = word.substring(width);
-            }
-
-            if (current.length() > 0 && current.length() + 1 + word.length() > width) {
-                lines.add(current.toString());
-                current.setLength(0);
-            }
-
-            if (current.length() > 0) {
-                current.append(' ');
-            }
-            current.append(word);
-        }
-
-        if (current.length() > 0) {
-            lines.add(current.toString());
-        }
-        return lines;
+        return TextUtil.wrap(text, width);
     }
 
     // Putlon ang taas nga text para dili mabungkag ang table
     private String cut(String text, int max) {
-        if (text == null) return "-";
-        return text.length() <= max ? text : text.substring(0, max - 3) + "...";
+        return TextUtil.cut(text, max);
     }
 }

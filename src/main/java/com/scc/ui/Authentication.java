@@ -1,8 +1,9 @@
 package com.scc.ui;
 
-import com.scc.Model.User;
+import com.scc.model.User;
 import com.scc.dao.ActivityLogDao;
 import com.scc.dao.UserDao;
+import com.scc.util.InputUtil;
 
 import java.util.Scanner;
 
@@ -141,6 +142,6 @@ public class Authentication {
 
 
     private static boolean isValidContact(String contact) {
-        return contact.matches("\\d{11}");
+        return InputUtil.isValidContact(contact);
     }
 }

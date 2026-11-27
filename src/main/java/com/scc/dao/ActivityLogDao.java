@@ -1,6 +1,6 @@
 package com.scc.dao;
 
-import com.scc.Model.ActivityLog;
+import com.scc.model.ActivityLog;
 
 import java.sql.*;
 import java.util.ArrayList;

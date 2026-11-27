@@ -1,4 +1,4 @@
-package com.scc.Model;
+package com.scc.model;
 
 public record User(int user_id, String fullname, String contact,String username, String password, String role,String status, String date_created) {
 
