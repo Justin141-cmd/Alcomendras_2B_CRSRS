@@ -61,10 +61,6 @@ public class UserDao {
                         System.out.println("-> Account is pending, Waiting for Approval");
                         return null;
                     }
-                    if("INACTIVE".equalsIgnoreCase(status)){
-                        System.out.println("-> Account is inactive. Please contact the Admin.");
-                        return null;
-                    }
                     return new User(
                             rs.getInt("user_id"),
                             rs.getString("fullname"),
@@ -160,7 +156,7 @@ public class UserDao {
     }
 
     public boolean approvedUser(int userId){
-        String sql = "UPDATE users SET status = 'ACTIVE' WHERE user_id = ?";
+        String sql = "UPDATE users SET status = 'APPROVED' WHERE user_id = ?";
 
         try(Connection conn = DatabaseConnection.getConnection();
             PreparedStatement pstmt = conn.prepareStatement(sql)){
@@ -208,7 +204,7 @@ public class UserDao {
 
     public List<User> getActiveTechnicians() {
         List<User> list = new ArrayList<>();
-        String sql = "SELECT * FROM users WHERE role = 'TECHNICIAN' AND status = 'ACTIVE'";
+        String sql = "SELECT * FROM users WHERE role = 'TECHNICIAN' AND status = 'APPROVED'";
 
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql);

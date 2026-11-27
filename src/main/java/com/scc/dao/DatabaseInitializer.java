@@ -15,6 +15,9 @@ public class DatabaseInitializer {
         try (Connection conn = DatabaseConnection.getConnection();
              Statement stmt = conn.createStatement()) {
 
+            // 0. Kung karaan pa ang users table (ACTIVE/INACTIVE), i-convert sa PENDING/APPROVED
+            migrateUserStatus(conn);
+
             // 1. users
             stmt.execute("""
                     CREATE TABLE IF NOT EXISTS users (
@@ -24,7 +27,7 @@ public class DatabaseInitializer {
                         username     TEXT NOT NULL UNIQUE,
                         password     TEXT NOT NULL,
                         role         TEXT NOT NULL CHECK (role IN ('ADMIN', 'CUSTOMER', 'TECHNICIAN')),
-                        status       TEXT NOT NULL DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'ACTIVE', 'INACTIVE')),
+                        status       TEXT NOT NULL DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'APPROVED')),
                         date_created TEXT DEFAULT (datetime('now', 'localtime'))
                     )
                     """);
@@ -88,6 +91,47 @@ public class DatabaseInitializer {
         }
     }
 
+    // ACTIVE -> APPROVED, INACTIVE -> PENDING. Rebuild sa users table kay dili ma-usab ang CHECK constraint.
+    private static void migrateUserStatus(Connection conn) throws SQLException {
+        String tableSql = null;
+        try (PreparedStatement pstmt = conn.prepareStatement(
+                "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'users'");
+             ResultSet rs = pstmt.executeQuery()) {
+            if (rs.next()) tableSql = rs.getString(1);
+        }
+
+        if (tableSql == null || !tableSql.contains("INACTIVE")) {
+            return;   // wala pa ang table o bag-o na ang structure
+        }
+
+        try (Statement stmt = conn.createStatement()) {
+            stmt.execute("PRAGMA foreign_keys = OFF");
+            stmt.execute("""
+                    CREATE TABLE users_new (
+                        user_id      INTEGER PRIMARY KEY AUTOINCREMENT,
+                        fullname     TEXT NOT NULL,
+                        contact      TEXT NOT NULL,
+                        username     TEXT NOT NULL UNIQUE,
+                        password     TEXT NOT NULL,
+                        role         TEXT NOT NULL CHECK (role IN ('ADMIN', 'CUSTOMER', 'TECHNICIAN')),
+                        status       TEXT NOT NULL DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'APPROVED')),
+                        date_created TEXT DEFAULT (datetime('now', 'localtime'))
+                    )
+                    """);
+            stmt.execute("""
+                    INSERT INTO users_new(user_id, fullname, contact, username, password, role, status, date_created)
+                    SELECT user_id, fullname, contact, username, password, role,
+                           CASE status WHEN 'ACTIVE' THEN 'APPROVED' ELSE 'PENDING' END,
+                           date_created
+                    FROM users
+                    """);
+            stmt.execute("DROP TABLE users");
+            stmt.execute("ALTER TABLE users_new RENAME TO users");
+            stmt.execute("PRAGMA foreign_keys = ON");
+            System.out.println(" -> Users table migrated: ACTIVE -> APPROVED, INACTIVE -> PENDING.");
+        }
+    }
+
     // Kung naay karaan nga activity_logs nga kulang sa gikinahanglan nga columns, i-drop aron mahimo ang bag-o
     private static void replaceOldActivityLogs(Connection conn) throws SQLException {
         Set<String> columns = new HashSet<>();
@@ -132,7 +176,7 @@ public class DatabaseInitializer {
             pstmt.setString(3, "admin");
             pstmt.setString(4, "admin123");
             pstmt.setString(5, "ADMIN");
-            pstmt.setString(6, "ACTIVE");
+            pstmt.setString(6, "APPROVED");
             pstmt.executeUpdate();
             System.out.println(" -> Default admin created (username: admin / password: admin123)");
         }

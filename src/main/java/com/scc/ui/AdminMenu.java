@@ -273,8 +273,8 @@ public class AdminMenu {
                     + " (role " + target.role() + " -> " + newRole
                     + ", status " + target.status() + " -> " + newStatus + ")";
 
-            String actionType = (newStatus.equals("INACTIVE") && !target.status().equals("INACTIVE"))
-                    ? "USER_DEACTIVATED"
+            String actionType = (newStatus.equals("PENDING") && !target.status().equals("PENDING"))
+                    ? "USER_SET_PENDING"
                     : "USER_UPDATED";
 
             logDao.logAction(currentAdmin.user_id(), actionType, description);
@@ -300,18 +300,18 @@ public class AdminMenu {
 
     private String readValidStatus() {
         while (true) {
-            System.out.print("Enter Status(ACTIVE/INACTIVE [0 to cancel]): ");
+            System.out.print("Enter Status(APPROVED/PENDING [0 to cancel]): ");
             String status = sc.nextLine().trim().toUpperCase();
 
             if (status.equals("0") || status.equals("CANCEL")) {
                 return null;
             }
 
-            if (status.equals("ACTIVE") || status.equals("INACTIVE")) {
+            if (status.equals("APPROVED") || status.equals("PENDING")) {
                 return status;
             }
 
-            System.out.println(" -> [ERROR] Invalid Status. Must be ACTIVE or INACTIVE.");
+            System.out.println(" -> [ERROR] Invalid Status. Must be APPROVED or PENDING.");
         }
     }
 
